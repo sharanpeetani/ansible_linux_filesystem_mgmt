@@ -1,0 +1,22 @@
+- hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+  - name: Create list of mounted devices
+    set_fact:
+      mount_points: "{{ ansible_mounts|json_query('[].mount') }}"
+      mounted_devices: "{{ ansible_mounts|json_query('[].device') }}"
+
+  - debug:
+      msg: "{{ mounted_devices }}"
+
+  - debug:
+      msg: "{{ mount_points }}"
+
+  - debug:
+      msg: "{{ item.key }} has total size {{ item.value.size_g }}GB"
+    with_dict: "{{ ansible_lvm.vgs }}"
+
+  - debug:
+      msg: "{{ ansible_devices.keys() | select('match','sd[b-d]') | map('regex_replace','^','/dev/') | list }}"

@@ -1,0 +1,6 @@
+lvm_swap:
+  - name: "Swap LVM"
+    swap_vg: "vg00"
+    swap_lv: "lvswap"
+    swap_size: "3g"
+    fstype: "swap"

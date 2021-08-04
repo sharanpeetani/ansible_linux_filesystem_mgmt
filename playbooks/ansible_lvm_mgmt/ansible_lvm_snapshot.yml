@@ -1,0 +1,13 @@
+---
+- name: Create LVM snapshot
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+  - name: Create a snapshot for logical volume lvtest
+    lvol:
+      vg: vg01
+      lv: lvtest
+      size: 350m
+      snapshot: snap1

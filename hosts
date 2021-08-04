@@ -1,0 +1,2 @@
+[all]
+centos.lab.com ansible_host=192.168.56.111 ansible_user=vagrant ansible_python_interpreter=/usr/bin/python3

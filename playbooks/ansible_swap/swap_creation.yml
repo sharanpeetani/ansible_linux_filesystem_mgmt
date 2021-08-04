@@ -1,0 +1,53 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - swap_vars.yml
+
+  tasks:
+
+  - name: "Current Swap Size"
+    debug:
+      msg: "Total Swap Size: {{ ( ansible_swaptotal_mb / 1024 ) | round(2) }} GB"
+
+  - name: "Disable Swap"
+    command: swapoff -a
+    when: ansible_swaptotal_mb > 0
+
+  - name: Refresh facts
+    setup:
+
+  - name: "Extend Swap LVM"
+    lvol:
+      vg: "{{ item.swap_vg }}"
+      lv: "{{ item.swap_lv }}"
+      size: "{{ item.swap_size }}"
+      state: "present"
+    loop: "{{ lvm_swap }}"
+    loop_control:
+      label: "{{ item.swap_lv }}"
+
+  - name: "Format Swap LVM"
+    command: mkswap /dev/"{{ item.swap_vg }}"/"{{ item.swap_lv }}"
+    loop: "{{ lvm_swap }}"
+    loop_control:
+      label: "{{ item.swap_lv }}"
+
+#  - name: Add swap to /etc/fstab
+#    mount:
+#      name: none
+#      src: /dev/vg00/lvswap
+#      fstype: swap
+#      state: present
+
+  - name: "Turn on Swap LVM"
+    command: swapon -a
+    when: ansible_swaptotal_mb == 0
+
+  - name: Refresh facts
+    setup:
+
+  - name: "New Swap LVM size"
+    debug:
+      msg: "Total Swap Size: {{ ( ansible_swaptotal_mb / 1024 ) | round(2) }} GB"

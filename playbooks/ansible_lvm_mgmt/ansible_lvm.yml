@@ -1,0 +1,55 @@
+---
+- name: Sample playbook to create LVM
+  hosts: all
+  become: yes
+  gather_facts: yes
+
+  tasks:
+  - name: create partition
+    parted:
+      device: /dev/sdd
+      number: 1
+      flags: [ lvm ]
+      state: present
+      part_end: 4GB
+
+  - name: Create volume group
+    lvg:
+      vg: vg01
+      pvs: /dev/sdd1
+      pesize: "16"
+
+  - name: Create logical volume
+    lvol:
+      vg: vg01
+      lv: lvtest
+      size: 1g
+      force: yes
+
+  - name: format the xfs filesystem
+    filesystem:
+      fstype: xfs
+      dev: /dev/vg01/lvtest
+
+  - name: mount the lvm on /mount1
+    mount:
+      path: /mount1
+      src: /dev/vg01/lvtest
+      fstype: xfs
+      state: mounted
+
+  - name: Extend the logical volume
+    lvol:
+      vg: vg01
+      lv: lvtest
+      size: 2g
+      resizefs: true
+      force: yes
+
+  - name: Shrink the logical volume
+    lvol:
+      vg: vg01
+      lv: lvtest
+      size: 700m
+      shrink: yes
+      force: yes

@@ -1,0 +1,72 @@
+---
+- hosts: all
+  become: yes
+  gather_facts: yes
+  vars_files:
+    - lvm_info.yml
+
+  tasks:
+  - name: create partition
+    parted:
+      device: "{{ item.pv }}"
+      number: "{{ item.number }}"
+      part_start: "{{ item.start }}"
+      part_end: "{{ item.end }}"
+      state: present
+      flags: [ lvm ]
+    loop: "{{ lvm_pvs }}"
+    loop_control:
+      label: "{{ item.pv }}"
+
+  - name: "Create Volume Groups"
+    lvg:
+      vg: "{{ item.vg }}"
+      pvs: "{{ item.pvs }}"
+      state: "present"
+    loop: "{{ lvm_vgs }}"
+    loop_control:
+      label: "{{ item.vg }}"
+
+  - name: "Create Logical Volume"
+    lvol:
+      vg: "{{ item.vg }}"
+      lv: "{{ item.lv }}"
+      size: "{{ item.size }}"
+      state: "present"
+      resizefs: yes
+      force: yes
+    loop: "{{ lvm_lvs }}"
+    loop_control:
+      label: "{{ item.lv }}"
+
+  - name: "Create filesystem on Logical Volume"
+    filesystem:
+      fstype: "{{ item.fstype }}"
+      dev: "/dev/{{ item.vg }}/{{ item.lv }}"
+    loop: "{{ lvm_lvs }}"
+    loop_control:
+      label: "{{ item.lv }}"
+
+  - name: "Mount the Logical Volume"
+    mount:
+      src: "/dev/{{ item.vg }}/{{ item.lv }}"
+      path: "{{ item.mount }}"
+      fstype: "{{ item.fstype }}"
+      opts: "{{ item.mount_opts }}"
+      dump: "{{ item.mount_dump }}"
+      passno: "{{ item.mount_passno }}"
+      state: "{{ item.mount_state }}"
+    loop: "{{ lvm_lvs }}"
+    loop_control:
+      label: "{{ item.lv }}"
+    when: ansible_mounts | selectattr('mount', 'equalto', item.mount) | list | length == 0
+
+  - name: "Apply permissions on mount point"
+    file:
+      path: "{{ item.mount }}"
+      owner: "{{ item.mount_owner }}"
+      group: "{{ item.mount_group }}"
+      mode: "{{ item.mount_mode }}"
+    loop: "{{ lvm_lvs }}"
+    loop_control:
+      label: "{{ item.mount }}"

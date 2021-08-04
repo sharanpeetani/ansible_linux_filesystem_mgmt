@@ -1,0 +1,66 @@
+lvm_pvs:
+  - pv: "/dev/sdb"
+    number: 1
+    start: 1MiB
+    end: 3GiB
+  - pv: "/dev/sdb"
+    number: 2
+    start: 3GiB
+    end: 6GiB
+  - pv: "/dev/sdb"
+    number: 3
+    start: 6GiB
+    end: 9GiB
+  - pv: "/dev/sdc"
+    number: 1
+    start: 1MiB
+    end: 2GiB
+
+lvm_vgs:
+  - vg: "vg03"
+    pvs: "/dev/sdb1"
+  - vg: "vg04"
+    pvs: "/dev/sdb2,/dev/sdb3"
+
+lvm_lvs:
+  - name: "Data Volume"
+    vg: "vg03"
+    lv: "lv_data"
+    size: "2g"
+    mount: "/data"
+    mount_owner: "vagrant"
+    mount_group: "vagrant"
+    mount_mode: "0755"
+    mount_dump: "1"
+    mount_passno: "2"
+    mount_opts: "defaults"
+    mount_state: "mounted"
+    fstype: "xfs"
+
+  - name: "Web Content"
+    vg: "vg04"
+    lv: "lv_web1"
+    size: "2g"
+    mount: "/web"
+    mount_owner: "vagrant"
+    mount_group: "vagrant"
+    mount_mode: "0755"
+    mount_dump: "1"
+    mount_passno: "2"
+    mount_opts: "rw,noexec,nodev,nosuid"
+    mount_state: "present"
+    fstype: "ext4"
+
+  - name: "Log Volume"
+    vg: "vg04"
+    lv: "lv_log"
+    size: "3g"
+    mount: "/log"
+    mount_owner: "vagrant"
+    mount_group: "vagrant"
+    mount_mode: "0755"
+    mount_dump: "1"
+    mount_passno: "2"
+    mount_opts: "defaults"
+    mount_state: "mounted"
+    fstype: "xfs"
